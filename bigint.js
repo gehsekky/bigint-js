@@ -8,6 +8,10 @@ function BigInt(n) {
   this.parse(n);
 }
 
+/**
+ * Parses value into a BigInt
+ * @param {*} n The value to be parsed
+ */
 BigInt.prototype.parse = function (n) {
   // check if we are parsing another BigInt
   if (typeof (n) === 'object' && n instanceof BigInt) {
@@ -68,8 +72,11 @@ BigInt.prototype.parse = function (n) {
   }
 }
 
+/**
+ * Class method to return string
+ */
 BigInt.prototype.toString = function () {
-  let str = '';
+  let str = this._isPositive ? '' : '-';
   const lim = this.numArray.length;
   for (let i = 0; i < lim; i++) {
     str += this.numArray[i] + '';
@@ -78,6 +85,11 @@ BigInt.prototype.toString = function () {
   return str;
 }
 
+/**
+ * Class comparator for equality
+ * @param {BigInt} n Compares parent value to passed in value
+ * @returns {boolean} Returns true if equal, false otherwise
+ */
 BigInt.prototype.Equals = function (n) {
   const numToCompare = new BigInt(n);
   const numToCompareArr = numToCompare.getNumArray();
@@ -96,6 +108,10 @@ BigInt.prototype.Equals = function (n) {
   return true;
 }
 
+/**
+ * Adds BigInt to passed in value
+ * @param {*} n The value to add to this BigInt instance
+ */
 BigInt.prototype.Add = function (n) {
   if (!n) throw new Error('No parameter specified');
 
@@ -150,6 +166,10 @@ BigInt.prototype.Add = function (n) {
   return this;
 }
 
+/**
+ * Mulitplies instance value to passed in value
+ * @param {*} n The value to multiply instance against
+ */
 BigInt.prototype.Multiply = function (n) {
   if (!n) throw new Error('No parameter specified');
 
@@ -173,6 +193,10 @@ BigInt.prototype.Multiply = function (n) {
 
   let result = [], i, j;
   for (i = 0; i < smallerLength; i++) {
+    if (smaller[i] === 0) {
+      result.push(0);
+      continue;
+    }
     let carry = 0, sumCarry = 0;
     for (j = 0; j < biggerLength; j++) {
       let product = (smaller[i] * bigger[j]) + carry;
@@ -186,7 +210,7 @@ BigInt.prototype.Multiply = function (n) {
       }
 
       if (result.length < j + i + 1) {
-        result.push((digitBase + sumCarry));
+        result.push(digitBase + sumCarry);
         sumCarry = 0;
       } else {
         const sum = result[j + i] + digitBase + sumCarry;
@@ -203,11 +227,8 @@ BigInt.prototype.Multiply = function (n) {
       }
     }
 
-    if (carry) {
-      result.push(carry);
-    }
-    if (sumCarry) {
-      result.push(sumCarry);
+    if (carry || sumCarry) {
+      result.push(carry + sumCarry);
     }
   }
 
@@ -216,6 +237,10 @@ BigInt.prototype.Multiply = function (n) {
   return this;
 }
 
+/**
+ * Returns a copy of the instance's internal numArray
+ * @return {number[]} A copy of the instance numArray
+ */
 BigInt.prototype.getNumArray = function () {
   const lim = this.numArray.length;
   let cloned = [];
@@ -226,10 +251,19 @@ BigInt.prototype.getNumArray = function () {
   return cloned;
 }
 
+/**
+ * Class method to see if instance is positive
+ * @return {boolean} Whether instance is positive or not
+ */
 BigInt.prototype.isPositive = function () {
   return this._isPositive;
 }
 
+/**
+ * Reverses the passed in array
+ * @param {*} arr The array to reverse
+ * @returns {number[]} Copy of passed in array with contents reversed
+ */
 function reverseArray(arr) {
   const copied = [], lim = arr.length;
   for (let i = lim - 1; i > -1; i--) {
@@ -238,6 +272,10 @@ function reverseArray(arr) {
   return copied;
 }
 
+/**
+ * Converts a number to its true value and handles scientific notation
+ * @returns {string} String representation of a number of any size
+ */
 Number.prototype.toFixedSpecial = function() {
   var str = this.toFixed();
   if (str.indexOf('e+') < 0)
