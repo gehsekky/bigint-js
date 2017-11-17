@@ -74,6 +74,7 @@ BigInt.prototype.parse = function (n) {
 
 /**
  * Class method to return string
+ * @returns The string representation of the BigInt instance
  */
 BigInt.prototype.toString = function () {
   let str = this._isPositive ? '' : '-';
@@ -111,6 +112,7 @@ BigInt.prototype.Equals = function (n) {
 /**
  * Adds BigInt to passed in value
  * @param {*} n The value to add to this BigInt instance
+ * @returns {BigInt} Returns itself
  */
 BigInt.prototype.Add = function (n) {
   if (!n) throw new Error('No parameter specified');
@@ -169,6 +171,7 @@ BigInt.prototype.Add = function (n) {
 /**
  * Mulitplies instance value to passed in value
  * @param {*} n The value to multiply instance against
+ * @returns {BigInt} Returns itself
  */
 BigInt.prototype.Multiply = function (n) {
   if (!n) throw new Error('No parameter specified');
@@ -239,7 +242,7 @@ BigInt.prototype.Multiply = function (n) {
 
 /**
  * Returns a copy of the instance's internal numArray
- * @return {number[]} A copy of the instance numArray
+ * @returns {number[]} A copy of the instance numArray
  */
 BigInt.prototype.getNumArray = function () {
   const lim = this.numArray.length;
@@ -257,6 +260,23 @@ BigInt.prototype.getNumArray = function () {
  */
 BigInt.prototype.isPositive = function () {
   return this._isPositive;
+}
+
+/**
+ * Factorial method for BigInt
+ * @returns {BigInt} A new BigInt of the factorial value
+ */
+BigInt.prototype.Factorial = function () {
+  if (this.Equals(0)) return new BigInt(1);
+
+  let sum = new BigInt(1);
+  let multiplicand = new BigInt(1);
+  while (!multiplicand.Equals(this)) {
+    sum.Multiply(multiplicand);
+    multiplicand.Add(new BigInt(1));
+  }
+  sum.Multiply(multiplicand);
+  return sum;
 }
 
 /**
