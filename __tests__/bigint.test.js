@@ -7,11 +7,14 @@ describe('bigint', () => {
   });
 
   it('should work for big numbers', () => {
+    expect(new BigInt(factorial(10)).toString()).toBe('3628800');
+    expect(new BigInt(factorial(11)).toString()).toBe('39916800');
     expect(new BigInt(factorial(15)).toString()).toBe('1307674368000');
     expect(new BigInt(factorial(20)).toString()).toBe('2432902008176640000');
     expect(new BigInt(factorial(22)).toString()).toBe('1124000727777607680000');
     expect(new BigInt(factorial(24)).toString()).toBe('620448401733239439360000');
-    // expect(new BigInt(factorial(25)).toString()).toBe('15511210043330985984000000');
+    expect(new BigInt(factorial(25)).toString()).toBe('15511210043330985984000000');
+    expect(new BigInt(factorial(38)).toString()).toBe('523022617466601111760007224100074291200000000');
   });
 
   it('should add', () => {
@@ -36,6 +39,10 @@ describe('bigint', () => {
     a = new BigInt('1024');
     a.Multiply(new BigInt('1024'));
     expect(a.toString()).toBe('1048576');
+
+    a = new BigInt('39916800');
+    a.Multiply(new BigInt('12'));
+    expect(a.toString()).toBe('479001600');
   });
 
   it('should compare equality', () => {
@@ -45,8 +52,17 @@ describe('bigint', () => {
 });
 
 function factorial(n) {
-  if (n < 0) return null;
-  if (n === 0) return 1;
+  if (!(n instanceof BigInt)) {
+    n = new BigInt(n);
+  }
+  if (n.Equals(0)) return new BigInt(1);
 
-  return n * factorial(n - 1);
+  let sum = new BigInt(1);
+  let multiplicand = new BigInt(1);
+  while (!multiplicand.Equals(n)) {
+    sum.Multiply(multiplicand);
+    multiplicand.Add(new BigInt(1));
+  }
+  sum.Multiply(multiplicand);
+  return sum;
 }

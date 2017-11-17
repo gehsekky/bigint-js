@@ -3,9 +3,9 @@
  * @param {*} n A value to be parsed into a BigInt
  */
 function BigInt(n) {
+  this._isPositive = true;
   this.numArray = [];
   this.parse(n);
-  this._isPositive = true;
 }
 
 BigInt.prototype.parse = function (n) {
@@ -13,6 +13,7 @@ BigInt.prototype.parse = function (n) {
   if (typeof (n) === 'object' && n instanceof BigInt) {
     this.numArray = n.getNumArray();
     this._isPositive = n.isPositive();
+
     return;
   }
 
@@ -22,11 +23,12 @@ BigInt.prototype.parse = function (n) {
       n = Math.abs(n);
       this._isPositive = false;
     }
-    while (n > 0) {
-      let a = n % 10;
-      n = Math.trunc(n / 10);
-      this.numArray.splice(0, 0, a + '');
+
+    const str = n.toFixedSpecial(0);
+    for  (let i = 0; i < str.length; i++) {
+      this.numArray.push(parseInt(str[i]));
     }
+
     return;
   }
 
@@ -38,11 +40,13 @@ BigInt.prototype.parse = function (n) {
         n = Math.abs(n);
         this._isPositive = false;
       }
+
       while (n > 0) {
         let a = n % 10;
         n = Math.trunc(n / 10);
-        this.numArray.splice(0, 0, a + '');
+        this.numArray.splice(0, 0, a);
       }
+
       return;
     }
 
@@ -58,7 +62,7 @@ BigInt.prototype.parse = function (n) {
         this.numArray.push(base[i]);
       }
       for (let i = 0; i <= match[3] - base.length; i++) {
-        this.numArray.push('0');
+        this.numArray.push(0);
       }
     }
   }
@@ -94,14 +98,12 @@ BigInt.prototype.Equals = function (n) {
 
 BigInt.prototype.Add = function (n) {
   if (!n) throw new Error('No parameter specified');
-  console.log('n.isPositive', n.isPositive());
 
   let thisReversed = reverseArray(this.numArray), thisLength = this.numArray.length;
 
   const nArray = n.getNumArray();
   const nLength = nArray.length;
   let nReversed = reverseArray(nArray);
-
 
   const lengthMax = nLength > thisLength ? nLength : thisLength;
 
@@ -134,16 +136,18 @@ BigInt.prototype.Add = function (n) {
         thisReversed.push(remainder);
       } else {
         carry = false;
-        thisReversed.push(sum + '');
+        thisReversed.push(sum);
       }
     }
   }
 
   if (carry) {
-    thisReversed.push('1');
+    thisReversed.push(1);
   }
 
   this.numArray = reverseArray(thisReversed);
+
+  return this;
 }
 
 BigInt.prototype.Multiply = function (n) {
@@ -167,10 +171,10 @@ BigInt.prototype.Multiply = function (n) {
     smallerLength = nLength;
   }
 
-  let result = [];
-  for (let i = 0; i < smallerLength; i++) {
+  let result = [], i, j;
+  for (i = 0; i < smallerLength; i++) {
     let carry = 0, sumCarry = 0;
-    for (let j = 0; j < biggerLength; j++) {
+    for (j = 0; j < biggerLength; j++) {
       let product = (smaller[i] * bigger[j]) + carry;
       let digitBase;
       if (product > 9) {
@@ -182,7 +186,8 @@ BigInt.prototype.Multiply = function (n) {
       }
 
       if (result.length < j + i + 1) {
-        result.push(digitBase);
+        result.push((digitBase + sumCarry));
+        sumCarry = 0;
       } else {
         const sum = result[j + i] + digitBase + sumCarry;
         let sumBase;
@@ -200,7 +205,6 @@ BigInt.prototype.Multiply = function (n) {
 
     if (carry) {
       result.push(carry);
-      carry = 0;
     }
     if (sumCarry) {
       result.push(sumCarry);
@@ -208,6 +212,8 @@ BigInt.prototype.Multiply = function (n) {
   }
 
   this.numArray = reverseArray(result);
+
+  return this;
 }
 
 BigInt.prototype.getNumArray = function () {
@@ -231,5 +237,16 @@ function reverseArray(arr) {
   }
   return copied;
 }
+
+Number.prototype.toFixedSpecial = function() {
+  var str = this.toFixed();
+  if (str.indexOf('e+') < 0)
+    return str;
+
+  // if number is in scientific notation, pick (b)ase and (p)ower
+  return str.replace('.', '').split('e+').reduce(function(p, b) {
+    return p + Array(b - p.length + 2).join(0);
+  });
+};
 
 module.exports = BigInt;
