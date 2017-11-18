@@ -7,7 +7,7 @@ describe('bigint', () => {
     expect(new BigInt('105').toString()).toBe('105');
   });
 
-  it('should work for big numbers', () => {
+  it('should work for big numbers via factorial', () => {
     expect(new BigInt(10).Factorial().toString()).toBe('3628800');
     expect(new BigInt(10).Factorial().toString()).toBe('3628800');
     expect(new BigInt(11).Factorial().toString()).toBe('39916800');
@@ -22,37 +22,51 @@ describe('bigint', () => {
 
   it('should add', () => {
     let a = new BigInt('1307674368000');
-    a.Add(new BigInt('123'));
+    a.Add('123');
     expect(a.toString()).toBe('1307674368123');
 
     a = new BigInt('555');
-    a.Add(new BigInt('555'));
+    a.Add('555');
     expect(a.toString()).toBe('1110');
 
     a = new BigInt('255');
-    a.Add(new BigInt(-1));
+    a.Add(-1);
     expect(a.toString()).toBe('254');
 
     a = new BigInt('6227020800');
-    a.Add(new BigInt('6227020800'));
+    a.Add('6227020800');
     expect(a.toString()).toBe('12454041600');
+
+    a = new BigInt('1234');
+    a.Add(-1000);
+    expect(a.toString()).toBe('234');
+  });
+
+  it('should subtract', () => {
+    let a = new BigInt('304888344611713860501504000009');
+    a.Subtract('304888344611713860501504000000');
+    expect(a.toString()).toBe('9');
+
+    a = new BigInt(-250);
+    a.Subtract(-250);
+    expect(a.toString()).toBe('0');
   });
 
   it('should multiply', () => {
     let a = new BigInt('256');
-    a.Multiply(new BigInt('256'));
+    a.Multiply('256');
     expect(a.toString()).toBe('65536');
 
     a = new BigInt('1024');
-    a.Multiply(new BigInt('1024'));
+    a.Multiply('1024');
     expect(a.toString()).toBe('1048576');
 
     a = new BigInt('39916800');
-    a.Multiply(new BigInt('12'));
+    a.Multiply('12');
     expect(a.toString()).toBe('479001600');
 
     a = new BigInt('362880');
-    a.Multiply(new BigInt('362880'));
+    a.Multiply('362880');
     expect(a.toString()).toBe('131681894400');
   });
 
