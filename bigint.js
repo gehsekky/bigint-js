@@ -9,6 +9,53 @@ function BigInt(n) {
 }
 
 /**
+ * Reverses the passed in array
+ * @param {*} arr The array to reverse
+ * @returns {number[]} Copy of passed in array with contents reversed
+ */
+function reverseArray(arr) {
+  const copied = [];
+  const lim = arr.length;
+
+  for (let i = lim - 1; i > -1; i--) {
+    copied.push(arr[i]);
+  }
+
+  return copied;
+}
+
+/**
+ * Checks for and initializes parameter if need be
+ * @param {*} n Passed in parameter value
+ * @returns {BigInt} A BigInt instance of the parameter
+ */
+function initializeParam(n) {
+  if (typeof (n) === 'undefined' || n === null) {
+    throw new Error('No parameter found');
+  }
+
+  if (n instanceof BigInt) {
+    return n;
+  }
+
+  return new BigInt(n);
+}
+
+/**
+ * Removes leading zeroes from array
+ * @param {number[]} n Array potentially containing leading zeroes
+ */
+function removeLeadingZeroes(n) {
+  if (!n.length) return n;
+
+  while (n[0] === 0 && n.length > 1) {
+    n.splice(0, 1);
+  }
+
+  return n;
+}
+
+/**
  * Parses value into a BigInt
  * @param {*} n The value to be parsed
  */
@@ -29,8 +76,8 @@ BigInt.prototype.parse = function (n) {
     }
 
     const str = n.toFixedSpecial(0);
-    for  (let i = 0; i < str.length; i++) {
-      this.numArray.push(parseInt(str[i]));
+    for (let i = 0; i < str.length; i++) {
+      this.numArray.push(parseInt(str[i], 10));
     }
 
     return;
@@ -41,21 +88,16 @@ BigInt.prototype.parse = function (n) {
     // check if string is of regular number
     if (/^-?\d+$/.test(n)) {
       if (n < 0) {
-        n = Math.abs(n);
+        n = n.substring(1);
         this._isPositive = false;
       }
 
-      while (n > 0) {
-        let a = n % 10;
-        n = Math.trunc(n / 10);
-        this.numArray.splice(0, 0, a);
-      }
-
+      this.numArray = n.split('').map(char => parseInt(char, 10));
       return;
     }
 
     // check if string is in scientific notation
-    let match = /^(\d+(\.\d+)?)e[-+](\d+)$/.exec(n);
+    const match = /^(\d+(\.\d+)?)e[-+](\d+)$/.exec(n);
     if (match) {
       let base = match[1].replace('.', '');
       if (n < 0) {
@@ -70,7 +112,7 @@ BigInt.prototype.parse = function (n) {
       }
     }
   }
-}
+};
 
 /**
  * Class method to return string
@@ -80,11 +122,11 @@ BigInt.prototype.toString = function () {
   let str = this._isPositive ? '' : '-';
   const lim = this.numArray.length;
   for (let i = 0; i < lim; i++) {
-    str += this.numArray[i] + '';
+    str += this.numArray[i].toString();
   }
 
   return str;
-}
+};
 
 /**
  * Class comparator for equality
@@ -92,11 +134,13 @@ BigInt.prototype.toString = function () {
  * @returns {boolean} Returns true if equal, false otherwise
  */
 BigInt.prototype.Equals = function (n) {
+  n = initializeParam(n);
+
   const numToCompare = new BigInt(n);
   const numToCompareArr = numToCompare.getNumArray();
-  const thisLength = this.numArray.length, nLength = numToCompareArr.length;
+  const thisLength = this.numArray.length;
 
-  if (thisLength !== nLength) {
+  if (thisLength !== numToCompareArr.length) {
     return false;
   }
 
@@ -107,7 +151,7 @@ BigInt.prototype.Equals = function (n) {
   }
 
   return true;
-}
+};
 
 /**
  * Adds BigInt to passed in value
@@ -115,23 +159,25 @@ BigInt.prototype.Equals = function (n) {
  * @returns {BigInt} Returns itself
  */
 BigInt.prototype.Add = function (n) {
-  if (!n) throw new Error('No parameter specified');
+  n = initializeParam(n);
 
-  let thisReversed = reverseArray(this.numArray), thisLength = this.numArray.length;
-
+  const thisReversed = reverseArray(this.numArray);
+  const thisLength = this.numArray.length;
   const nArray = n.getNumArray();
   const nLength = nArray.length;
-  let nReversed = reverseArray(nArray);
+  const nReversed = reverseArray(nArray);
 
   const lengthMax = nLength > thisLength ? nLength : thisLength;
 
   let carry = false;
   for (let i = 0; i < lengthMax; i++) {
-    let sum = 0, remainder = 0;
+    let sum = 0;
+    let remainder = 0;
 
     if (i < thisLength) {
       if (i < nLength) {
-        sum = Number(thisReversed[i]) + (Number(nReversed[i]) * (n.isPositive() ? 1 : -1)) + (carry ? 1 : 0);
+        sum = (Number(thisReversed[i]) * (this.isPositive() ? 1 : -1)) +
+          (Number(nReversed[i]) * (n.isPositive() ? 1 : -1)) + (carry ? 1 : 0);
       } else {
         sum = Number(thisReversed[i]) + (carry ? 1 : 0);
       }
@@ -165,8 +211,25 @@ BigInt.prototype.Add = function (n) {
 
   this.numArray = reverseArray(thisReversed);
 
+  removeLeadingZeroes(this.numArray);
+
+  if (this.Equals(0) && !this.isPositive()) {
+    this._isPositive = true;
+  }
+
   return this;
-}
+};
+
+/**
+ * Subtracts value from BigInt instance
+ * @param {*} n
+ */
+BigInt.prototype.Subtract = function (n) {
+  n = initializeParam(n);
+
+  n._isPositive = !n._isPositive;
+  return this.Add(n);
+};
 
 /**
  * Mulitplies instance value to passed in value
@@ -174,10 +237,15 @@ BigInt.prototype.Add = function (n) {
  * @returns {BigInt} Returns itself
  */
 BigInt.prototype.Multiply = function (n) {
-  if (!n) throw new Error('No parameter specified');
+  n = initializeParam(n);
 
   const nArray = n.getNumArray();
-  let thisLength = this.numArray.length, nLength = nArray.length, bigger = null, smaller = null, smallerLength, biggerLength;
+  const nLength = nArray.length;
+  const thisLength = this.numArray.length;
+  let bigger = null;
+  let smaller = null;
+  let smallerLength;
+  let biggerLength;
 
   const thisReversed = reverseArray(this.numArray);
   const nReversed = reverseArray(nArray);
@@ -194,15 +262,16 @@ BigInt.prototype.Multiply = function (n) {
     smallerLength = nLength;
   }
 
-  let result = [], i, j;
-  for (i = 0; i < smallerLength; i++) {
+  const result = [];
+  for (let i = 0; i < smallerLength; i++) {
     if (smaller[i] === 0) {
       result.push(0);
       continue;
     }
-    let carry = 0, sumCarry = 0;
-    for (j = 0; j < biggerLength; j++) {
-      let product = (smaller[i] * bigger[j]) + carry;
+    let carry = 0;
+    let sumCarry = 0;
+    for (let j = 0; j < biggerLength; j++) {
+      const product = (smaller[i] * bigger[j]) + carry;
       let digitBase;
       if (product > 9) {
         digitBase = product % 10;
@@ -238,7 +307,7 @@ BigInt.prototype.Multiply = function (n) {
   this.numArray = reverseArray(result);
 
   return this;
-}
+};
 
 /**
  * Returns a copy of the instance's internal numArray
@@ -246,13 +315,13 @@ BigInt.prototype.Multiply = function (n) {
  */
 BigInt.prototype.getNumArray = function () {
   const lim = this.numArray.length;
-  let cloned = [];
+  const cloned = [];
   for (let i = 0; i < lim; i++) {
     cloned[i] = this.numArray[i];
   }
 
   return cloned;
-}
+};
 
 /**
  * Class method to see if instance is positive
@@ -260,7 +329,7 @@ BigInt.prototype.getNumArray = function () {
  */
 BigInt.prototype.isPositive = function () {
   return this._isPositive;
-}
+};
 
 /**
  * Factorial method for BigInt
@@ -269,40 +338,28 @@ BigInt.prototype.isPositive = function () {
 BigInt.prototype.Factorial = function () {
   if (this.Equals(0)) return new BigInt(1);
 
-  let sum = new BigInt(1);
-  let multiplicand = new BigInt(1);
+  const sum = new BigInt(1);
+  const multiplicand = new BigInt(1);
   while (!multiplicand.Equals(this)) {
     sum.Multiply(multiplicand);
     multiplicand.Add(new BigInt(1));
   }
   sum.Multiply(multiplicand);
   return sum;
-}
-
-/**
- * Reverses the passed in array
- * @param {*} arr The array to reverse
- * @returns {number[]} Copy of passed in array with contents reversed
- */
-function reverseArray(arr) {
-  const copied = [], lim = arr.length;
-  for (let i = lim - 1; i > -1; i--) {
-    copied.push(arr[i]);
-  }
-  return copied;
-}
+};
 
 /**
  * Converts a number to its true value and handles scientific notation
  * @returns {string} String representation of a number of any size
  */
-Number.prototype.toFixedSpecial = function() {
-  var str = this.toFixed();
-  if (str.indexOf('e+') < 0)
+Number.prototype.toFixedSpecial = function () {
+  const str = this.toFixed();
+  if (str.indexOf('e+') < 0) {
     return str;
+  }
 
   // if number is in scientific notation, pick (b)ase and (p)ower
-  return str.replace('.', '').split('e+').reduce(function(p, b) {
+  return str.replace('.', '').split('e+').reduce((p, b) => {
     return p + Array(b - p.length + 2).join(0);
   });
 };
